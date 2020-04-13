@@ -1,5 +1,41 @@
+services:
+    - docker
+
+env:
+  global:
+    - ON_TRAVIS=true
+    - MUTE_LOGS=true
+    - WITH_PYTHON_PEP=true
+    - IMAGE=qgis/qgis
+
+  matrix:
+    - QGIS_VERSION_TAG=latest
+    - QGIS_VERSION_TAG=release-3_4
+
 language: python
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+
+python:
+  - "3.6"
+
+addons:
+  apt:
+    packages:
+      - git
+      - python-software-properties
+
+before_install:
+  - docker pull ${IMAGE}:${QGIS_VERSION_TAG}
+
 install:
+  - pip install --upgrade pip
   - pip install -r requirements-dev.txt
-script: 
+  - docker-compose up -d
+  - sleep 10
+
+script:
   - black --check Azenqos/
+  # - docker-compose exec qgis-testing-environment qgis_testrunner.sh test_suite.test_package
